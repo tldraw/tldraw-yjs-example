@@ -14,6 +14,7 @@ import {
 	defaultShapeUtils,
 	getUserPreferences,
 	react,
+	transact,
 } from '@tldraw/tldraw'
 import { useEffect, useMemo, useState } from 'react'
 import { WebsocketProvider } from 'y-websocket'
@@ -84,7 +85,7 @@ export function useYjsStore({
 				// is empty, initialize the yjs doc with the default store records.
 				if (yRecords.size === 0) {
 					// Create the initial store records
-					Y.transact(doc, () => {
+					transact(() => {
 						store.clear()
 						store.put([
 							DocumentRecordType.create({
@@ -106,7 +107,7 @@ export function useYjsStore({
 					})
 				} else {
 					// Replace the store records with the yjs doc records
-					Y.transact(doc, () => {
+					transact(() => {
 						store.clear()
 						store.put([...yRecords.values()])
 					})
