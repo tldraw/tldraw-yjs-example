@@ -12,6 +12,7 @@ import {
 	createPresenceStateDerivation,
 	createTLStore,
 	defaultShapeUtils,
+	defaultUserPreferences,
 	getUserPreferences,
 	react,
 	transact,
@@ -139,7 +140,7 @@ export function useYjsStore({
 
 				// Sync the yjs doc changes to the store
 				const handleChange = (
-					events: Y.YEvent[],
+					events: Y.YEvent<any>[],
 					transaction: Y.Transaction
 				) => {
 					if (transaction.local) return
@@ -175,16 +176,24 @@ export function useYjsStore({
 
 				/* -------------------- Awareness ------------------- */
 
+				const userPreferences = computed<{
+					id: string
+					color: string
+					name: string
+				}>('userPreferences', () => {
+					const user = getUserPreferences()
+					return {
+						id: user.id,
+						color: user.color ?? defaultUserPreferences.color,
+						name: user.name ?? defaultUserPreferences.name,
+					}
+				})
+
 				// Create the instance presence derivation
 				const yClientId = room.awareness.clientID.toString()
 				const presenceId = InstancePresenceRecordType.createId(yClientId)
-				const userPreferencesComputed = computed('ok', () =>
-					getUserPreferences()
-				)
-				const presenceDerivation = createPresenceStateDerivation(
-					userPreferencesComputed,
-					presenceId
-				)(store)
+				const presenceDerivation =
+					createPresenceStateDerivation(userPreferences)(store)
 
 				// Set our initial presence from the derivation's current value
 				room.awareness.setLocalStateField('presence', presenceDerivation.value)
