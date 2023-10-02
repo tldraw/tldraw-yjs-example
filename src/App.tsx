@@ -9,7 +9,7 @@ const HOST_URL =
 
 export default function YjsExample() {
 	const store = useYjsStore({
-		roomId: 'example6',
+		roomId: 'example7',
 		hostUrl: HOST_URL,
 	})
 

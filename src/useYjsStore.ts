@@ -18,6 +18,7 @@ import {
 	transact,
 } from '@tldraw/tldraw'
 import { useEffect, useMemo, useState } from 'react'
+import { YKeyValue } from 'y-utility/y-keyvalue'
 import { WebsocketProvider } from 'y-websocket'
 import * as Y from 'yjs'
 
@@ -40,12 +41,15 @@ export function useYjsStore({
 		status: 'loading',
 	})
 
-	const { doc, room, yRecords } = useMemo(() => {
-		const doc = new Y.Doc({ gc: true })
+	const { yDoc, yStore, room } = useMemo(() => {
+		const yDoc = new Y.Doc({ gc: true })
+		const yArr = yDoc.getArray<{ key: string; val: TLRecord }>(`tl_${roomId}`)
+		const yStore = new YKeyValue(yArr)
 		return {
-			doc,
-			room: new WebsocketProvider(hostUrl, roomId, doc, { connect: true }),
-			yRecords: doc.getMap<TLRecord>(`tl_${roomId}`),
+			yDoc,
+			yStore,
+			room: new WebsocketProvider(hostUrl, roomId, yDoc, { connect: true }),
+			// yStore: yDoc.getMap<TLRecord>(`tl_${roomId}`),
 		}
 	}, [hostUrl, roomId])
 
@@ -84,7 +88,7 @@ export function useYjsStore({
 
 				// Initialize the store with the yjs doc records—or, if the yjs doc
 				// is empty, initialize the yjs doc with the default store records.
-				if (yRecords.size === 0) {
+				if (yStore.yarray.length === 0) {
 					// Create the initial store records
 					transact(() => {
 						store.clear()
@@ -101,16 +105,17 @@ export function useYjsStore({
 					})
 
 					// Sync the store records to the yjs doc
-					doc.transact(() => {
+					yDoc.transact(() => {
 						for (const record of store.allRecords()) {
-							yRecords.set(record.id, record)
+							yStore.set(record.id, record)
 						}
 					})
 				} else {
 					// Replace the store records with the yjs doc records
 					transact(() => {
 						store.clear()
-						store.put([...yRecords.values()])
+						const records = yStore.yarray.toJSON().map(({ val }) => val)
+						store.put(records)
 					})
 				}
 
@@ -120,17 +125,17 @@ export function useYjsStore({
 				unsubs.push(
 					store.listen(
 						function syncStoreChangesToYjsDoc({ changes }) {
-							doc.transact(() => {
+							yDoc.transact(() => {
 								Object.values(changes.added).forEach((record) => {
-									yRecords.set(record.id, record)
+									yStore.set(record.id, record)
 								})
 
 								Object.values(changes.updated).forEach(([_, record]) => {
-									yRecords.set(record.id, record)
+									yStore.set(record.id, record)
 								})
 
 								Object.values(changes.removed).forEach((record) => {
-									yRecords.delete(record.id)
+									yStore.delete(record.id)
 								})
 							})
 						},
@@ -140,7 +145,12 @@ export function useYjsStore({
 
 				// Sync the yjs doc changes to the store
 				const handleChange = (
-					events: Y.YEvent<any>[],
+					changes: Map<
+						string,
+						| { action: 'delete'; oldValue: TLRecord }
+						| { action: 'update'; oldValue: TLRecord; newValue: TLRecord }
+						| { action: 'add'; newValue: TLRecord }
+					>,
 					transaction: Y.Transaction
 				) => {
 					if (transaction.local) return
@@ -148,20 +158,19 @@ export function useYjsStore({
 					const toRemove: TLRecord['id'][] = []
 					const toPut: TLRecord[] = []
 
-					events.forEach((event) => {
-						event.changes.keys.forEach((change, id) => {
-							switch (change.action) {
-								case 'add':
-								case 'update': {
-									toPut.push(yRecords.get(id)!)
-									break
-								}
-								case 'delete': {
-									toRemove.push(id as TLRecord['id'])
-									break
-								}
+					changes.forEach((change, id) => {
+						switch (change.action) {
+							case 'add':
+							case 'update': {
+								const record = yStore.get(id)!
+								toPut.push(record)
+								break
 							}
-						})
+							case 'delete': {
+								toRemove.push(id as TLRecord['id'])
+								break
+							}
+						}
 					})
 
 					// put / remove the records in the store
@@ -171,8 +180,8 @@ export function useYjsStore({
 					})
 				}
 
-				yRecords.observeDeep(handleChange)
-				unsubs.push(() => yRecords.unobserveDeep(handleChange))
+				yStore.on('change', handleChange)
+				unsubs.push(() => yStore.off('change', handleChange))
 
 				/* -------------------- Awareness ------------------- */
 
@@ -266,7 +275,7 @@ export function useYjsStore({
 			unsubs.forEach((fn) => fn())
 			unsubs.length = 0
 		}
-	}, [room, doc, store, yRecords])
+	}, [room, yDoc, store, yStore])
 
 	return storeWithStatus
 }
