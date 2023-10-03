@@ -56,6 +56,8 @@ export function useYjsStore({
 	}, [hostUrl, roomId])
 
 	useEffect(() => {
+		setStoreWithStatus({ status: 'loading' })
+
 		const unsubs: (() => void)[] = []
 
 		function handleSync() {
@@ -266,8 +268,6 @@ export function useYjsStore({
 		return () => {
 			unsubs.forEach((fn) => fn())
 			unsubs.length = 0
-			// This feels pretty risky but prevents some HMR issues
-			setStoreWithStatus({ status: 'loading' })
 		}
 	}, [room, yDoc, store, yStore])
 
