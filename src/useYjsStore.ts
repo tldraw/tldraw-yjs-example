@@ -233,7 +233,7 @@ export function useYjsStore({
 			})
 		}
 
-		// let hasConnectedBefore = false
+		let hasConnectedBefore = false
 
 		function handleStatusChange({
 			status,
@@ -253,6 +253,8 @@ export function useYjsStore({
 			room.off('synced', handleSync)
 
 			if (status === 'connected') {
+				if (hasConnectedBefore) return
+				hasConnectedBefore = true
 				room.on('synced', handleSync)
 				unsubs.push(() => room.off('synced', handleSync))
 			}
@@ -264,6 +266,8 @@ export function useYjsStore({
 		return () => {
 			unsubs.forEach((fn) => fn())
 			unsubs.length = 0
+			// This feels pretty risky but prevents some HMR issues
+			setStoreWithStatus({ status: 'loading' })
 		}
 	}, [room, yDoc, store, yStore])
 
