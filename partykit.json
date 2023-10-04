@@ -1,0 +1,16 @@
+{
+  "name": "tldraw-partykit-yjs-example",
+  "main": "src/server.ts",
+  "serve": {
+    "path": "dist",
+    "build": {
+      "entry": "src/main.tsx",
+      "bundle": true,
+      "splitting": true,
+      "minify": false,
+      "format": "esm",
+      "sourcemap": true
+    }
+  },
+  "compatibilityDate": "2023-10-04"
+}

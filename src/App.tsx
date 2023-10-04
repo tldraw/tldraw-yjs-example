@@ -1,11 +1,18 @@
 import { Tldraw, track, useEditor } from '@tldraw/tldraw'
 import '@tldraw/tldraw/tldraw.css'
 import { useYjsStore } from './useYjsStore'
+console.log(
+	// @ts-ignore
+	PARTYKIT_HOST,
+	// @ts-ignore
+	process.env.PARTYKIT_HOST,
+	import.meta.env.PARTYKIT_HOST
+)
 
 const HOST_URL =
 	import.meta.env.MODE === 'development'
 		? 'ws://localhost:1234'
-		: 'wss://demos.yjs.dev'
+		: import.meta.env.PARTYKIT_HOST
 
 export default function YjsExample() {
 	const store = useYjsStore({
