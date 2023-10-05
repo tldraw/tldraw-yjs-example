@@ -2,12 +2,9 @@ import { Tldraw, track, useEditor } from '@tldraw/tldraw'
 import '@tldraw/tldraw/tldraw.css'
 import { useYjsStore } from './useYjsStore'
 
-const url = import.meta.env.VITE_PRODUCTION_URL.replace('https://', '').replace(
-	'wss://',
-	''
-)
-
-const HOST_URL = import.meta.env.DEV ? 'ws://localhost:1234' : `wss://${url}` // remove protocol just in case
+const HOST_URL = import.meta.env.DEV
+	? 'ws://localhost:1234'
+	: import.meta.env.VITE_PRODUCTION_URL.replace('https://', 'ws://') // remove protocol just in case
 
 export default function YjsExample() {
 	const store = useYjsStore({
