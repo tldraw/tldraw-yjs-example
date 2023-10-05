@@ -4,4 +4,14 @@ This branch shows a partykit integration.
 
 For production:
 
-- run `yarn deploy`
+- First create a `.env` file with:
+
+```
+VITE_PRODUCTION_URL=tldraw-partykit-yjs-example.USERNAME.partykit.dev
+```
+
+...replacing `USERNAME` with your partykit username.
+
+- Then run `yarn deploy`
+
+If it's your first time using partykit, you may need to try deploying first in order to get your username. While the instructions above should work, the real way to do this is to point the `VITE_PRODUCTION_URL` at whatever URL you're deploying the website to, but without the `https://` protocol.

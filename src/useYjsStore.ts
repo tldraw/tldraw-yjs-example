@@ -54,7 +54,7 @@ export function useYjsStore({
 				connect: true,
 			}),
 		}
-	}, [hostUrl, roomId])
+	}, [hostUrl, roomId, version])
 
 	useEffect(() => {
 		setStoreWithStatus({ status: 'loading' })

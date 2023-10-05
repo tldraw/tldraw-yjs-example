@@ -1,18 +1,13 @@
 import { Tldraw, track, useEditor } from '@tldraw/tldraw'
 import '@tldraw/tldraw/tldraw.css'
 import { useYjsStore } from './useYjsStore'
-console.log(
-	// @ts-ignore
-	PARTYKIT_HOST,
-	// @ts-ignore
-	process.env.PARTYKIT_HOST,
-	import.meta.env.PARTYKIT_HOST
+
+const url = import.meta.env.VITE_PRODUCTION_URL.replace('https://', '').replace(
+	'wss://',
+	''
 )
 
-const HOST_URL =
-	import.meta.env.MODE === 'development'
-		? 'ws://localhost:1234'
-		: import.meta.env.PARTYKIT_HOST
+const HOST_URL = import.meta.env.DEV ? 'ws://localhost:1234' : `wss://${url}` // remove protocol just in case
 
 export default function YjsExample() {
 	const store = useYjsStore({
