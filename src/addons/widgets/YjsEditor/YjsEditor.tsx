@@ -6,6 +6,9 @@ import style from "./YjsEditor.module.css";
 import { useNavigate } from "react-router-dom";
 import { Button, Grid } from "@mui/material";
 
+import ViewportDetection from "../../features/ViewportDetection";
+import useViewport from "../../features/useViewport";
+
 const HOST_URL = "ws://localhost:1234";
 
 interface YjsEditorProps {
@@ -13,11 +16,15 @@ interface YjsEditorProps {
 }
 
 export default function YjsEditor({ roomId }: YjsEditorProps) {
+
+  const { pageId, viewportCoords } = useViewport()
+
   const store = useYjsStore({
     roomId,
     hostUrl: HOST_URL,
   });
 
+  console.log(pageId, viewportCoords)
 
   return (
     <div className={style.tldraw__editor}>
@@ -40,11 +47,23 @@ export default function YjsEditor({ roomId }: YjsEditorProps) {
             </Grid>
           </Grid>
         }
-      />
+        onMount={(editor) => {
+          if (pageId) {
+            editor.setCurrentPage(pageId)
+          }
+
+          if (viewportCoords) {
+            editor.setCamera(viewportCoords)
+          }
+        }}
+      >
+        <ViewportDetection />
+      </Tldraw>
     </div>
   );
 
 }
+
 
 const NameEditor = track(() => {
   const editor = useEditor();
