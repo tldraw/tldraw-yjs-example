@@ -9,7 +9,7 @@ import { Button, Grid } from "@mui/material";
 import ViewportDetection from "../../features/ViewportDetection";
 import useViewport from "../../features/useViewport";
 
-const HOST_URL = "ws://localhost:1234";
+const HOST_URL = import.meta.env.VITE_Y_WEBSOCKET_SERVER
 
 interface YjsEditorProps {
   roomId: string;
