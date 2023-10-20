@@ -10,9 +10,9 @@ export const DEFAULT_STORE = {
 		'pointer:pointer': {
 			id: 'pointer:pointer',
 			typeName: 'pointer',
-			x: 530.703125,
-			y: 647.30859375,
-			lastActivityTimestamp: 1696321778989,
+			x: 0,
+			y: 0,
+			lastActivityTimestamp: 0,
 			meta: {},
 		},
 		'page:page': {
@@ -60,8 +60,8 @@ export const DEFAULT_STORE = {
 			screenBounds: {
 				x: 0,
 				y: 0,
-				w: 1800,
-				h: 670,
+				w: 720,
+				h: 400,
 			},
 			zoomBrush: null,
 			isGridMode: false,
@@ -70,9 +70,10 @@ export const DEFAULT_STORE = {
 			isChatting: false,
 			highlightedUserIds: [],
 			canMoveCamera: true,
-			isFocused: false,
+			isFocused: true,
 			devicePixelRatio: 2,
 			isCoarsePointer: false,
+			isHoveringCanvas: false,
 			openMenus: [],
 			isChangingStyle: false,
 			isReadonly: false,
@@ -102,10 +103,10 @@ export const DEFAULT_STORE = {
 				version: 2,
 			},
 			instance: {
-				version: 20,
+				version: 21,
 			},
 			instance_page_state: {
-				version: 4,
+				version: 5,
 			},
 			page: {
 				version: 1,

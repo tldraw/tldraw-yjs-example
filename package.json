@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tldraw/tldraw": "^2.0.0-canary.647977ceecd0",
+    "@tldraw/tldraw": "^2.0.0-alpha.17",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "y-utility": "^0.1.3",
