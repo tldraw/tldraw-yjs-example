@@ -16,6 +16,8 @@ import {
 } from '@tldraw/tldraw'
 import { useEffect, useMemo, useState } from 'react'
 import { YKeyValue } from 'y-utility/y-keyvalue'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-ignore
 import { WebsocketProvider } from 'y-websocket'
 import * as Y from 'yjs'
 import { DEFAULT_STORE } from './default_store'
