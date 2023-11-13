@@ -10,6 +10,7 @@ import {
 	defaultShapeUtils,
 	defaultUserPreferences,
 	getUserPreferences,
+	setUserPreferences,
 	react,
 	transact,
 } from '@tldraw/tldraw'
@@ -130,6 +131,9 @@ export function useYjsStore({
 
 			/* -------------------- Awareness ------------------- */
 
+			const yClientId = room.awareness.clientID.toString()
+			setUserPreferences({ id: yClientId })
+
 			const userPreferences = computed<{
 				id: string
 				color: string
@@ -144,10 +148,9 @@ export function useYjsStore({
 			})
 
 			// Create the instance presence derivation
-			const yClientId = room.awareness.clientID.toString()
 			const presenceId = InstancePresenceRecordType.createId(yClientId)
 			const presenceDerivation =
-				createPresenceStateDerivation(userPreferences)(store)
+				createPresenceStateDerivation(userPreferences, presenceId)(store)
 
 			// Set our initial presence from the derivation's current value
 			room.awareness.setLocalStateField('presence', presenceDerivation.value)
