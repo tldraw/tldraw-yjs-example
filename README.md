@@ -7,18 +7,18 @@ To run the local development server, first clone this repo.
 Install dependencies:
 
 ```bash
-yarn
+npm i
 ```
 
 Start the local development server:
 
 For macOS/Linux:
 ```bash
-yarn dev
+npm run dev
 ```
 For Windows:
 ```bash
-yarn dev:win
+npm run dev:win
 ```
 
 Open the example project at `localhost:5173`.
