@@ -18,7 +18,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { YKeyValue } from 'y-utility/y-keyvalue'
 import { WebsocketProvider } from 'y-websocket'
 import * as Y from 'yjs'
-import { DEFAULT_STORE } from './default_store'
 
 export function useYjsStore({
 	roomId = 'example',
@@ -36,7 +35,14 @@ export function useYjsStore({
 		const store = createTLStore({
 			shapeUtils: [...defaultShapeUtils, ...shapeUtils],
 		})
-		store.loadSnapshot(DEFAULT_STORE)
+
+		// Load an empty snapshot to initialize the store with a usable document
+		// this usually happens when the Editor is initialized but we need
+		// store.loadSnapshot({
+		//   schema: store.schema.serialize(),
+		//   store: {},
+		// });
+
 		return store
 	})
 
@@ -85,8 +91,8 @@ export function useYjsStore({
 							})
 						})
 					},
-					{ source: 'user', scope: 'document' } // only sync user's document changes
-				)
+					{ source: 'user', scope: 'document' }, // only sync user's document changes
+				),
 			)
 
 			// Sync the yjs doc changes to the store
@@ -97,7 +103,7 @@ export function useYjsStore({
 					| { action: 'update'; oldValue: TLRecord; newValue: TLRecord }
 					| { action: 'add'; newValue: TLRecord }
 				>,
-				transaction: Y.Transaction
+				transaction: Y.Transaction,
 			) => {
 				if (transaction.local) return
 
@@ -149,20 +155,22 @@ export function useYjsStore({
 
 			// Create the instance presence derivation
 			const presenceId = InstancePresenceRecordType.createId(yClientId)
-			const presenceDerivation =
-				createPresenceStateDerivation(userPreferences, presenceId)(store)
+			const presenceDerivation = createPresenceStateDerivation(
+				userPreferences,
+				presenceId,
+			)(store)
 
 			// Set our initial presence from the derivation's current value
-			room.awareness.setLocalStateField('presence', presenceDerivation.value)
+			room.awareness.setLocalStateField('presence', presenceDerivation.get())
 
 			// When the derivation change, sync presence to to yjs awareness
 			unsubs.push(
 				react('when presence changes', () => {
-					const presence = presenceDerivation.value
+					const presence = presenceDerivation.get()
 					requestAnimationFrame(() => {
 						room.awareness.setLocalStateField('presence', presence)
 					})
-				})
+				}),
 			)
 
 			// Sync yjs awareness changes to the store
@@ -196,7 +204,7 @@ export function useYjsStore({
 
 				for (const clientId of update.removed) {
 					toRemove.push(
-						InstancePresenceRecordType.createId(clientId.toString())
+						InstancePresenceRecordType.createId(clientId.toString()),
 					)
 				}
 
