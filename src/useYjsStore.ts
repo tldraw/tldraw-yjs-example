@@ -46,7 +46,7 @@ export function useYjsStore({
 
 	const { yDoc, yStore, room } = useMemo(() => {
 		const yDoc = new Y.Doc({ gc: true })
-		const yArr = yDoc.getArray<{ key: string; val: TLRecord }>(`tl_${roomId}`)
+		const yArr = yDoc.getArray<{ key: string; val: TLRecord }>(`${roomId}`)
 		const yStore = new YKeyValue(yArr)
 
 		return {

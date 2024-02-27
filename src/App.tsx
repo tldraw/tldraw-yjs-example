@@ -4,12 +4,12 @@ import { useYjsStore } from './useYjsStore'
 
 const HOST_URL =
 	import.meta.env.MODE === 'development'
-		? 'ws://localhost:1234'
+		? 'wss://app.clickup-qa.com/whiteboards/v3/workspaces/123/whiteboards'
 		: 'wss://demos.yjs.dev'
 
 export default function YjsExample() {
 	const store = useYjsStore({
-		roomId: 'example17',
+		roomId: 'wb-id-1',
 		hostUrl: HOST_URL,
 	})
 
