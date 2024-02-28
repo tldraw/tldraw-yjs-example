@@ -12,7 +12,8 @@ import {
 	getUserPreferences,
 	setUserPreferences,
 	react,
-	transact,
+	compareSchemas,
+	SerializedSchema,
 } from '@tldraw/tldraw'
 import { useEffect, useMemo, useState } from 'react'
 import { YKeyValue } from 'y-utility/y-keyvalue'
@@ -36,13 +37,6 @@ export function useYjsStore({
 			shapeUtils: [...defaultShapeUtils, ...shapeUtils],
 		})
 
-		// Load an empty snapshot to initialize the store with a usable document
-		// this usually happens when the Editor is initialized but we need
-		// store.loadSnapshot({
-		//   schema: store.schema.serialize(),
-		//   store: {},
-		// });
-
 		return store
 	})
 
@@ -50,14 +44,16 @@ export function useYjsStore({
 		status: 'loading',
 	})
 
-	const { yDoc, yStore, room } = useMemo(() => {
+	const { yDoc, yStore, meta, room } = useMemo(() => {
 		const yDoc = new Y.Doc({ gc: true })
 		const yArr = yDoc.getArray<{ key: string; val: TLRecord }>(`tl_${roomId}`)
 		const yStore = new YKeyValue(yArr)
+		const meta = yDoc.getMap<SerializedSchema>('meta')
 
 		return {
 			yDoc,
 			yStore,
+			meta,
 			room: new WebsocketProvider(hostUrl, roomId, yDoc, { connect: true }),
 		}
 	}, [hostUrl, roomId])
@@ -215,6 +211,20 @@ export function useYjsStore({
 				})
 			}
 
+			const handleMetaUpdate = () => {
+				const theirSchema = meta.get('schema')
+				if (!theirSchema) {
+					throw new Error('No schema found in the yjs doc')
+				}
+				// If the shared schema is newer than our schema, the user must refresh
+				if (compareSchemas(theirSchema, store.schema.serialize()) === 1) {
+					window.alert('The schema has been updated. Please refresh the page.')
+					yDoc.destroy()
+				}
+			}
+			meta.observe(handleMetaUpdate)
+			unsubs.push(() => meta.unobserve(handleMetaUpdate))
+
 			room.awareness.on('update', handleUpdate)
 			unsubs.push(() => room.awareness.off('update', handleUpdate))
 
@@ -223,11 +233,43 @@ export function useYjsStore({
 			// is empty, initialize the yjs doc with the default store records.
 			if (yStore.yarray.length) {
 				// Replace the store records with the yjs doc records
-				transact(() => {
-					// The records here should be compatible with what's in the store
-					store.clear()
-					const records = yStore.yarray.toJSON().map(({ val }) => val)
-					store.put(records)
+				const ourSchema = store.schema.serialize()
+				const theirSchema = meta.get('schema')
+				if (!theirSchema) {
+					throw new Error('No schema found in the yjs doc')
+				}
+
+				const records = yStore.yarray.toJSON().map(({ val }) => val)
+
+				const migrationResult = store.schema.migrateStoreSnapshot({
+					schema: theirSchema,
+					store: Object.fromEntries(
+						records.map((record) => [record.id, record]),
+					),
+				})
+				if (migrationResult.type === 'error') {
+					// if the schema is newer than ours, the user must refresh
+					console.error(migrationResult.reason)
+					window.alert('The schema has been updated. Please refresh the page.')
+					return
+				}
+
+				yDoc.transact(() => {
+					// delete any deleted records from the yjs doc
+					for (const r of records) {
+						if (!migrationResult.value[r.id]) {
+							yStore.delete(r.id)
+						}
+					}
+					for (const r of Object.values(migrationResult.value) as TLRecord[]) {
+						yStore.set(r.id, r)
+					}
+					meta.set('schema', ourSchema)
+				})
+
+				store.loadSnapshot({
+					store: migrationResult.value,
+					schema: ourSchema,
 				})
 			} else {
 				// Create the initial store records
@@ -236,6 +278,7 @@ export function useYjsStore({
 					for (const record of store.allRecords()) {
 						yStore.set(record.id, record)
 					}
+					meta.set('schema', store.schema.serialize())
 				})
 			}
 
@@ -280,7 +323,7 @@ export function useYjsStore({
 			unsubs.forEach((fn) => fn())
 			unsubs.length = 0
 		}
-	}, [room, yDoc, store, yStore])
+	}, [room, yDoc, store, yStore, meta])
 
 	return storeWithStatus
 }
