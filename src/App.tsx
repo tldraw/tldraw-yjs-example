@@ -1,5 +1,5 @@
-import { Tldraw, track, useEditor } from '@tldraw/tldraw'
-import '@tldraw/tldraw/tldraw.css'
+import { Tldraw, track, useEditor } from 'tldraw'
+import 'tldraw/tldraw.css'
 import { useYjsStore } from './useYjsStore'
 
 const HOST_URL =

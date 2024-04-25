@@ -12,9 +12,8 @@ import {
 	getUserPreferences,
 	setUserPreferences,
 	react,
-	compareSchemas,
 	SerializedSchema,
-} from '@tldraw/tldraw'
+} from 'tldraw'
 import { useEffect, useMemo, useState } from 'react'
 import { YKeyValue } from 'y-utility/y-keyvalue'
 import { WebsocketProvider } from 'y-websocket'
@@ -217,7 +216,9 @@ export function useYjsStore({
 					throw new Error('No schema found in the yjs doc')
 				}
 				// If the shared schema is newer than our schema, the user must refresh
-				if (compareSchemas(theirSchema, store.schema.serialize()) === 1) {
+				const newMigrations = store.schema.getMigrationsSince(theirSchema)
+
+				if (!newMigrations.ok || newMigrations.value.length > 0) {
 					window.alert('The schema has been updated. Please refresh the page.')
 					yDoc.destroy()
 				}
