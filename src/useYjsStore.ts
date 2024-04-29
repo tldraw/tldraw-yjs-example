@@ -78,7 +78,11 @@ export function useYjsStore({
 							})
 
 							Object.values(changes.updated).forEach(([_, record]) => {
-								yStore.set(record.id, record)
+								// session records should only be locally,
+								// won't sync session records to yjsDoc.
+								if (!('scope' in record) || record.scope !== 'session') {
+									yStore.set(record.id, record)
+								}
 							})
 
 							Object.values(changes.removed).forEach((record) => {
@@ -110,7 +114,11 @@ export function useYjsStore({
 						case 'add':
 						case 'update': {
 							const record = yStore.get(id)!
-							toPut.push(record)
+							// session records should only be locally,
+							// won't sync session records from yjsDoc.
+							if (!('scope' in record) || record.scope !== 'session') {
+								toPut.push(record)
+							}
 							break
 						}
 						case 'delete': {
@@ -268,8 +276,10 @@ export function useYjsStore({
 					meta.set('schema', ourSchema)
 				})
 
+				// loadSnapshot will clear store firstly,
+				// previous local session records must be preserved manually.
 				store.loadSnapshot({
-					store: migrationResult.value,
+					store: { ...migrationResult.value, ...store.serialize('session') },
 					schema: ourSchema,
 				})
 			} else {
